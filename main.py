@@ -1,5 +1,4 @@
 import base64
-import logging
 import re
 import secrets
 import sqlite3
@@ -9,6 +8,8 @@ import time as t
 import requests
 from bs4 import BeautifulSoup
 from requests.sessions import session
+import telebot
+from telebot.types import Chat, Message
 
 sys.dont_write_bytecode = True
 
@@ -87,24 +88,27 @@ class WebSiteChecker():
                     order_info.update({'products': products})
                     self.notified_orders.update({clear_order[1]: order_info})
 
-    def except_html(self, order: list) -> list[str]:
+    def except_html(self, order: list) -> list:
         pattern = r'<[^>]*>'
         clear_list = [re.sub(pattern, '', str(item)) for item in order]
         clear_list[5] = ''
         return clear_list
-            
+
+bot = telebot.TeleBot(token=secrets.BOT_TOKEN, parse_mode=None)
+
+@bot.message_handler(commands=['start', 'help'])
+def start(message):
+    bot.reply_to(message, )
+
+@bot.message_handler(commands=['login'])
+def login(message):
+    print(message.chat.id)
 
 
-class Bot():
-    def __init__(self) -> None:
-        self.token = secrets.BOT_TOKEN
 
 
 def work():
     pass
 
 if __name__ == '__main__':
-    test = WebSiteChecker()
-    test.login_to()
-    test.new_orders()
-    print(test.notified_orders)
+    bot.infinity_polling()
