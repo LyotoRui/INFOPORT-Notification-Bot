@@ -43,7 +43,7 @@ class WebSiteChecker():
         self.password = secrets.WEB_PASSWORD
         self.session = requests.Session()
         self.notified_orders = {}
-    
+
     def login_to(self):
         _data = {
             'act': 'users',
@@ -94,18 +94,18 @@ class WebSiteChecker():
         clear_list[5] = ''
         return clear_list
 
+
 bot = telebot.TeleBot(token=secrets.BOT_TOKEN, parse_mode=None)
+
 
 @bot.message_handler(commands=['start', 'help'])
 def start(message):
-    bot.reply_to(message, )
+    bot.reply_to(message, 'Погнали')
+
 
 @bot.message_handler(commands=['login'])
 def login(message):
     print(message.chat.id)
-
-
-
 
 def work():
     pass
