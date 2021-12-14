@@ -2,22 +2,23 @@ import base64
 import re
 import secrets
 import sqlite3
+from sqlite3.dbapi2 import connect
 import sys
 import time as t
-import threading
 
 import requests
+import telebot
 from bs4 import BeautifulSoup
 from requests.sessions import session
-import telebot
-from telebot.types import Chat, Message
-import db
+from telebot import types
+
 
 sys.dont_write_bytecode = True
 
 users = sqlite3.connect('users.db', check_same_thread=False)
 curs = users.cursor()
 
+notified_orders = {}
 
 class RZTKChecker():
     def __init__(self) -> None:
@@ -30,6 +31,7 @@ class RZTKChecker():
         self.password_encoded = password.decode('UTF-8')
 
     def login_to(self):
+        self.password_encode()
         account = {
             'username': self.login,
             'password': self.password_encoded
@@ -39,6 +41,36 @@ class RZTKChecker():
             data=account
         ).json()
         self.token = login['content'].get('access_token')
+    
+    def new_orders(self):
+        try:
+            key = {'Authorization': f'Bearer {self.token}'}
+            orders = requests.get('https://api-seller.rozetka.com.ua/orders/search?status=1', headers=key).json()
+            for order in orders['content']['orders']:
+                if order['id'] not in notified_orders.keys():
+                    order_id = order['id']
+                    products = {}
+                    order_info = {
+                        'customets_name': order['user_title']['first_name'],
+                        'customers_phone': order['user_phone'],
+                        'total_cost': order['cost']
+                    }
+                    for item in order['items_photos']:
+                        products.update({
+                            item['item_name']: {'count': 1,
+                            'price': item['item_price']}
+                        })
+                    order_info.update({'products': products})
+                    notified_orders.update({order['id']: order_info})
+                    notify([
+                        'ROZETKA','=============',
+                        f'Поступил заказ #{order_id}',
+                        '=============',
+                        f'\n---------------------------\n'.join(products.keys())
+                        ])
+        except AttributeError:
+            self.login_to()
+            self.new_orders()
 
 
 class WebSiteChecker():
@@ -92,7 +124,7 @@ class WebSiteChecker():
                             'total_cost': clear_order[-2]
                         }
                         order_info.update({'products': products})
-                        self.notified_orders.update({clear_order[1]: order_info})
+                        notified_orders.update({clear_order[1]: order_info})
                         notify([
                             'INFOPORT',
                             '=============',
@@ -115,19 +147,39 @@ bot = telebot.TeleBot(token=secrets.BOT_TOKEN, parse_mode=None)
 
 @bot.message_handler(commands=['login'])
 def login(message):
-    try:
-        db.insert_user(message.chat.id)
-        bot.reply_to()
-    except Exception as e:
-        print(e)
+    print(message.chat.id)
 
-def notify(message: list):
-    message = '\n'.join(message)
-    for user in secrets.user_id:
-        bot.send_message(chat_id=user, text=message)
+@bot.message_handler(content_types=["text"])
+def notify(notif: list):
+    notif = '\n'.join(notif)
+    
+    keyboard = types.InlineKeyboardMarkup()
+    callback_button = types.InlineKeyboardButton(text="Подробнее", callback_data="more_info")
+    keyboard.add(callback_button)
+    for user in secrets.USER_IDS:
+        bot.send_message(user, text=notif, reply_markup=keyboard, )
+    
+
+@bot.callback_query_handler(func=lambda call: True)
+def callback_inline(call):
+    if call.message:
+        if call.data == 'more_info':
+            bot.edit_message_text(
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                text='Test'
+                )
+            print(call.message.message_id)
+            
 
 def work():
-    pass
+    rozetka = RZTKChecker()
+    web = WebSiteChecker()
+    web.new_orders()
+    rozetka.new_orders()
 
 if __name__ == '__main__':
-    bot.infinity_polling()
+    while True:
+        work()
+        bot.polling()
+        t.sleep(15)
