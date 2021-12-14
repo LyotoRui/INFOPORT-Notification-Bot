@@ -14,9 +14,9 @@ from telebot.types import Chat, Message
 import db
 
 sys.dont_write_bytecode = True
-db_data = threading.local()
-db_data.users = sqlite3.connect('users.db', check_same_thread=False)
-db_data.curs = db_data.users.cursor()
+
+users = sqlite3.connect('users.db', check_same_thread=False)
+curs = users.cursor()
 
 
 class RZTKChecker():
