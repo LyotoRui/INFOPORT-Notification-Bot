@@ -4,14 +4,19 @@ import secrets
 import sqlite3
 import sys
 import time as t
+import threading
 
 import requests
 from bs4 import BeautifulSoup
 from requests.sessions import session
 import telebot
 from telebot.types import Chat, Message
+import db
 
 sys.dont_write_bytecode = True
+db_data = threading.local()
+db_data.users = sqlite3.connect('users.db', check_same_thread=False)
+db_data.curs = db_data.users.cursor()
 
 
 class RZTKChecker():
@@ -59,34 +64,45 @@ class WebSiteChecker():
             )
 
     def new_orders(self):
-        data = self.session.get(
-            'https://infoport.pro/cp/orders/',
-            headers=self.header
-            ).text
-        soup = BeautifulSoup(data, 'lxml')
-        order_list = soup.find(class_="ordert").find_all('tr')
-        for order in order_list:
-            if len(order) > 3:
-                order = order.find_all('td')
-                clear_order = self.except_html(order)
-                if len(clear_order[-1]) == 0:
-                    products = {}
-                    mid_prod = []
-                    for item in clear_order[6:-3]:
-                        mid_prod.append(item)
-                        if len(mid_prod) == 3:
-                            products.update(
-                                {mid_prod[0]: {'count': mid_prod[1],
-                                'price':mid_prod[2]}}
-                                )
-                            mid_prod = []
-                    order_info = {
-                        'customers_name': clear_order[4],
-                        'customers_phone': clear_order[-3],
-                        'total_cost': clear_order[-2]
-                    }
-                    order_info.update({'products': products})
-                    self.notified_orders.update({clear_order[1]: order_info})
+        try:
+            data = self.session.get(
+                'https://infoport.pro/cp/orders/',
+                headers=self.header
+                ).text
+            soup = BeautifulSoup(data, 'lxml')
+            order_list = soup.find(class_="ordert").find_all('tr')
+            for order in order_list:
+                if len(order) > 3:
+                    order = order.find_all('td')
+                    clear_order = self.except_html(order)
+                    if len(clear_order[-1]) == 0:
+                        products = {}
+                        mid_prod = []
+                        for item in clear_order[6:-3]:
+                            mid_prod.append(item)
+                            if len(mid_prod) == 3:
+                                products.update(
+                                    {mid_prod[0]: {'count': mid_prod[1],
+                                    'price':mid_prod[2]}}
+                                    )
+                                mid_prod = []
+                        order_info = {
+                            'customers_name': clear_order[4],
+                            'customers_phone': clear_order[-3],
+                            'total_cost': clear_order[-2]
+                        }
+                        order_info.update({'products': products})
+                        self.notified_orders.update({clear_order[1]: order_info})
+                        notify([
+                            'INFOPORT',
+                            '=============',
+                            f'Поступил заказ #{clear_order[1]}',
+                            '=============',
+                            f'\n---------------------------\n'.join(products.keys())
+                        ])
+        except AttributeError:
+            self.login_to()
+            self.new_orders()
 
     def except_html(self, order: list) -> list:
         pattern = r'<[^>]*>'
@@ -97,15 +113,18 @@ class WebSiteChecker():
 
 bot = telebot.TeleBot(token=secrets.BOT_TOKEN, parse_mode=None)
 
-
-@bot.message_handler(commands=['start', 'help'])
-def start(message):
-    bot.reply_to(message, 'Погнали')
-
-
 @bot.message_handler(commands=['login'])
 def login(message):
-    print(message.chat.id)
+    try:
+        db.insert_user(message.chat.id)
+        bot.reply_to()
+    except Exception as e:
+        print(e)
+
+def notify(message: list):
+    message = '\n'.join(message)
+    for user in secrets.user_id:
+        bot.send_message(chat_id=user, text=message)
 
 def work():
     pass

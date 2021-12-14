@@ -1,2 +1,5 @@
 secrets.py
 __pycache__/secrets.cpython-310.pyc
+__pycache__/secrets.cpython-38.pyc
+users.db
+__pycache__/db.cpython-38.pyc
