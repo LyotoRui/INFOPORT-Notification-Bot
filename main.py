@@ -61,13 +61,14 @@ class RZTKChecker():
                             'price': item['item_price']}
                         })
                     order_info.update({'products': products})
-                    notified_orders.update({order['id']: order_info})
-                    notify([
-                        'ROZETKA','=============',
-                        f'Поступил заказ #{order_id}',
-                        '=============',
-                        f'\n---------------------------\n'.join(products.keys())
-                        ])
+                    if order_id not in self.notified_orders.keys():
+                        notify([
+                            'ROZETKA','=============',
+                            f'Поступил заказ #{order_id}',
+                            '=============',
+                            f'\n---------------------------\n'.join(products.keys())
+                            ])
+                        notified_orders.update({order['id']: order_info})
         except AttributeError:
             self.login_to()
             self.new_orders()
@@ -79,7 +80,6 @@ class WebSiteChecker():
         self.login = secrets.WEB_LOGIN
         self.password = secrets.WEB_PASSWORD
         self.session = requests.Session()
-        self.notified_orders = {}
 
     def login_to(self):
         _data = {
@@ -124,14 +124,15 @@ class WebSiteChecker():
                             'total_cost': clear_order[-2]
                         }
                         order_info.update({'products': products})
-                        notified_orders.update({clear_order[1]: order_info})
-                        notify([
-                            'INFOPORT',
-                            '=============',
-                            f'Поступил заказ #{clear_order[1]}',
-                            '=============',
-                            f'\n---------------------------\n'.join(products.keys())
-                        ])
+                        if clear_order[1] not in notified_orders.keys():
+                            notify([
+                                'INFOPORT',
+                                '=============',
+                                f'Поступил заказ #{clear_order[1]}',
+                                '=============',
+                                f'\n---------------------------\n'.join(products.keys())
+                            ])
+                            notified_orders.update({clear_order[1]: order_info})
         except AttributeError:
             self.login_to()
             self.new_orders()
@@ -152,25 +153,8 @@ def login(message):
 @bot.message_handler(content_types=["text"])
 def notify(notif: list):
     notif = '\n'.join(notif)
-    
-    keyboard = types.InlineKeyboardMarkup()
-    callback_button = types.InlineKeyboardButton(text="Подробнее", callback_data="more_info")
-    keyboard.add(callback_button)
     for user in secrets.USER_IDS:
-        bot.send_message(user, text=notif, reply_markup=keyboard, )
-    
-
-@bot.callback_query_handler(func=lambda call: True)
-def callback_inline(call):
-    if call.message:
-        if call.data == 'more_info':
-            bot.edit_message_text(
-                chat_id=call.message.chat.id,
-                message_id=call.message.message_id,
-                text='Test'
-                )
-            print(call.message.message_id)
-            
+        bot.send_message(user, text=notif)
 
 def work():
     rozetka = RZTKChecker()
@@ -181,5 +165,4 @@ def work():
 if __name__ == '__main__':
     while True:
         work()
-        bot.polling()
         t.sleep(15)
