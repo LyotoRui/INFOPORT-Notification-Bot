@@ -61,9 +61,10 @@ class RZTKChecker():
                             'price': item['item_price']}
                         })
                     order_info.update({'products': products})
-                    if order_id not in self.notified_orders.keys():
+                    if order_id not in notified_orders.keys():
                         notify([
-                            'ROZETKA','=============',
+                            'ROZETKA',
+                            '=============',
                             f'Поступил заказ #{order_id}',
                             '=============',
                             f'\n---------------------------\n'.join(products.keys())
