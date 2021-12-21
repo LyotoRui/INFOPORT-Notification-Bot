@@ -67,7 +67,12 @@ class RZTKChecker():
                             '=============',
                             f'Поступил заказ #{order_id}',
                             '=============',
-                            f'\n---------------------------\n'.join(products.keys())
+                            'Покупатель: {}'.format(order_info['customets_name']),
+                            'Телефон: {}'.format(order_info['customers_phone']),
+                            '=============',
+                            f'\n---------------------------\n'.join(products.keys()),
+                            '=============',
+                            'Итоговая сумма: {} грн'.format(order_info['total_cost'])
                             ])
                         notified_orders.update({order['id']: order_info})
         except AttributeError:
@@ -131,7 +136,12 @@ class WebSiteChecker():
                                 '=============',
                                 f'Поступил заказ #{clear_order[1]}',
                                 '=============',
-                                f'\n---------------------------\n'.join(products.keys())
+                                'Покупатель: {}'.format(order_info['customers_name']),
+                                'Телефон: {}'.format(order_info['customers_phone']),
+                                '=============',
+                                f'\n---------------------------\n'.join(products.keys()),
+                                '=============',
+                                'Итоговая сумма: {} грн'.format(order_info['total_cost'])
                             ])
                             notified_orders.update({clear_order[1]: order_info})
         except AttributeError:
