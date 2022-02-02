@@ -1,4 +1,5 @@
 import base64
+import decimal
 import re
 import secrets
 import sqlite3
