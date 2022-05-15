@@ -7,6 +7,7 @@ class RZTKChecker:
     def __init__(self) -> None:
         self.password = passwordEncode(secrets.RZTK_PASSWORD)
         self.notified_orders = list()
+        self.new_orders = list()
     
     def loginTo(self) -> None:
         account = {
@@ -28,13 +29,13 @@ class RZTKChecker:
                 'https://api-seller.rozetka.com.ua/orders/search?status=1',
                 headers=key
             )
-            new_orders = list()
+            self.new_orders = list()
             for order in get_orders['content']['orders']:
                 if order['id'] not in self.notified_orders:
                     products = list()
                     for item in order['items_photos']:
                         products.append(item['item_name'])
-                new_orders.append(
+                self.new_orders.append(
                     morphDataToNotify(
                         source='ROZETKA',
                         order_id=order['id'],
@@ -44,7 +45,6 @@ class RZTKChecker:
                         total_cost=order['cost']
                 ))
                 self.notified_orders.append(order['id'])
-            return new_orders
         except AttributeError:
             self.loginTo()
             self.getNewOrders()
