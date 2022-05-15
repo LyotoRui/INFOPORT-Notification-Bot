@@ -20,7 +20,10 @@ def notify(notif: str):
         bot.send_message(user, text=notif)
 
 def work():
-    web_data = web.getNewOrders()
+    web.getNewOrders()
+    if len(web.new_orders):
+        for order in web.new_orders:
+            notify(order)
     
 
 if __name__ == '__main__':

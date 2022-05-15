@@ -1,4 +1,3 @@
-from itertools import product
 import secrets
 import requests
 from bs4 import BeautifulSoup
@@ -9,6 +8,7 @@ class WebChecker:
     def __init__(self) -> None:
         self.session = requests.Session()
         self.notified_orders = list()
+        self.new_orders = list()
 
     def loginTo(self):
         _data = {
@@ -32,14 +32,14 @@ class WebChecker:
             ).text
             soup = BeautifulSoup(data, 'lxml')
             order_list = soup.find(class_='ordert').find_all('tr')
-            new_orders = []
+            self.new_orders = list()
             for order in order_list:
                 if len(order) > 3:
                     order = order.find_all('td')
                     clear_order = exceptHtml(order=order)
                     if clear_order[1] not in self.notified_orders:
                         items = clear_order[4:-3:3]
-                        new_orders.append(
+                        self.new_orders.append(
                             morphDataToNotify(
                                 source='INFOPORT',
                                 order_id=clear_order[1],
@@ -50,7 +50,8 @@ class WebChecker:
                             )
                         )
                         self.notified_orders.append(clear_order[1])
-            return new_orders
         except AttributeError:
             self.loginTo()
             self.getNewOrders()
+
+
