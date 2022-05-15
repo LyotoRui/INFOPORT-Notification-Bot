@@ -24,6 +24,10 @@ def work():
     if len(web.new_orders):
         for order in web.new_orders:
             notify(order)
+    rztk.getNewOrders()
+    if len(rztk.new_orders):
+        for order in rztk.new_orders:
+            notify(order)
     
 
 if __name__ == '__main__':
