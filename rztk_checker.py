@@ -3,12 +3,13 @@ import secrets
 import requests
 from misc_funcs import morphDataToNotify, passwordEncode
 
+
 class RZTKChecker:
     def __init__(self) -> None:
         self.password = passwordEncode(secrets.RZTK_PASSWORD)
         self.notified_orders = list()
         self.new_orders = list()
-    
+
     def loginTo(self) -> None:
         account = {
             'username': secrets.RZTK_LOGIN,
@@ -19,7 +20,7 @@ class RZTKChecker:
             data=account
         ).json()
         self.token = login['content'].get('access_token')
-    
+
     def getNewOrders(self) -> list:
         try:
             key = {
@@ -43,10 +44,9 @@ class RZTKChecker:
                         customer_phone=order['user_phone'],
                         products=products,
                         total_cost=order['cost']
-                ))
+                    )
+                )
                 self.notified_orders.append(order['id'])
         except AttributeError:
             self.loginTo()
             self.getNewOrders()
-        
-    

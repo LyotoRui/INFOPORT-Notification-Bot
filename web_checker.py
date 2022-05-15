@@ -23,7 +23,7 @@ class WebChecker:
             headers=secrets.HEADER,
             data=_data
         )
-    
+
     def getNewOrders(self) -> list:
         try:
             data = self.session.get(
@@ -53,5 +53,3 @@ class WebChecker:
         except AttributeError:
             self.loginTo()
             self.getNewOrders()
-
-
