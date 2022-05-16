@@ -1,6 +1,10 @@
 import base64
 import re
+import secrets
+import telebot
 
+
+bot = telebot.TeleBot(token=secrets.BOT_TOKEN, parse_mode=None)
 
 def morphDataToNotify(
     source: str,
@@ -37,3 +41,15 @@ def exceptHtml(order: list) -> list:
     clear_list = [re.sub(pattern, '', str(item)) for item in order]
     clear_list[5] = ''
     return [item for item in clear_list if item != '']
+
+
+@bot.message_handler(commands=['start'])
+def login(message):
+    bot.infinity_polling()
+    print(message.chat.id)
+
+
+@bot.message_handler(content_types=["text"])
+def notify(notif: str):
+    for user in secrets.USER_IDS:
+        bot.send_message(user, text=notif)

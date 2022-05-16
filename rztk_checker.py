@@ -29,7 +29,7 @@ class RZTKChecker:
             get_orders = requests.get(
                 'https://api-seller.rozetka.com.ua/orders/search?status=1',
                 headers=key
-            )
+            ).json()
             self.new_orders = list()
             for order in get_orders['content']['orders']:
                 if order['id'] not in self.notified_orders:
