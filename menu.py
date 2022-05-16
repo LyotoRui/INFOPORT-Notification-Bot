@@ -1,11 +1,13 @@
-import sys
-from pyfiglet import Figlet
-from getpass import getuser, getpass
 import os
+import sys
 import time
-from web_checker import WebChecker
-from rztk_checker import RZTKChecker
+from getpass import getpass, getuser
+
+from pyfiglet import Figlet
+
 from misc_funcs import notify
+from rztk_checker import RZTKChecker
+from web_checker import WebChecker
 
 web = WebChecker()
 rztk = RZTKChecker()
@@ -13,7 +15,7 @@ rztk = RZTKChecker()
 class Menu:
     def __init__(self) -> None:
         os.system('cls')
-        self._greet()
+        self.__greet()
         self.main_menu = {
             1: self.startWorking,
             2: self._settings,
@@ -32,18 +34,21 @@ class Menu:
         }
         self._main()
 
-    def _greet(self):
+    def __greet(self):
         prev_text = Figlet(font="slant")
         print(prev_text.renderText("INFOPORT BOT"))
 
     def _main(self):
+        self.__clear()
         try:
             user_input = int(
                 input('\n'.join(
-                    ['1. Запуск бота',
-                    '2. Настройки',
-                    '3. Выход',
-                    '']
+                    [
+                        '1. Запуск бота',
+                        '2. Настройки',
+                        '3. Выход',
+                        ''
+                    ]
                     )
                 )
             )
@@ -56,14 +61,14 @@ class Menu:
             self.__wrongInput()
             self._main()
 
-    def _clear(self):
+    def __clear(self):
         os.system('cls')
-        self._greet()
+        self.__greet()
 
     def __wrongInput(self):
         print('Неверный ввод')
         time.sleep(1)
-        self._clear()
+        self.__clear()
 
     def startWorking(self):
         print('Работаю... (Ctrl + C для завершения) ')
@@ -78,13 +83,14 @@ class Menu:
                     for order in rztk.new_orders:
                         notify(order)
         except KeyboardInterrupt:
-            self._clear()
+            self.__clear()
             print('Останавливаюсь...')
             time.sleep(1)
-            self._clear()
+            self.__clear()
             self._main()
 
     def _settings(self):
+        self.__clear()
         try:
             user_input = int(
                 input('\n'.join(
@@ -98,16 +104,13 @@ class Menu:
                     )
                 )
             )
-            self._clear()
         except ValueError:
             self.__wrongInput()
             self._settings()
         try:
             self.settings_menu[user_input]()
         except KeyError:
-            print('Неверный ввод')
-            time.sleep(1)
-            self._clear()
+            self.__wrongInput()
             self._settings()
 
     def _webLoginChange(self):
@@ -117,6 +120,7 @@ class Menu:
         pass
 
     def _userEdit(self):
+        self.__clear()
         try:
             user_input = int(
                 input(
@@ -146,8 +150,7 @@ class Menu:
         pass
 
     def _exit(self):
+        self.__clear()
         print('Закрываемся...')
         time.sleep(1)
         sys.exit()
-
-test = Menu()
