@@ -1,18 +1,17 @@
-import secrets
-
 import requests
 from misc_funcs import morphDataToNotify, passwordEncode
 
 
 class RZTKChecker:
-    def __init__(self) -> None:
-        self.password = passwordEncode(secrets.RZTK_PASSWORD)
+    def __init__(self, login_data: dict) -> None:
+        self.login = login_data['login']
+        self.password = passwordEncode(login_data['password'])
         self.notified_orders = list()
         self.new_orders = list()
 
     def loginTo(self) -> None:
         account = {
-            'username': secrets.RZTK_LOGIN,
+            'username': self.login,
             'password': self.password
         }
         login = requests.post(

@@ -5,7 +5,9 @@ from misc_funcs import morphDataToNotify, exceptHtml
 
 
 class WebChecker:
-    def __init__(self) -> None:
+    def __init__(self, login_data: dict) -> None:
+        self.login = login_data['login']
+        self.password = login_data['password']
         self.session = requests.Session()
         self.notified_orders = list()
         self.new_orders = list()
@@ -15,8 +17,8 @@ class WebChecker:
             'act': 'users',
             'opt': 'CpLogin',
             'path': '/cp/',
-            'login': secrets.WEB_LOGIN,
-            'password': secrets.WEB_PASSWORD
+            'login': self.login,
+            'password': self.password
         }
         self.session.post(
             'https://infoport.pro/cp/',
