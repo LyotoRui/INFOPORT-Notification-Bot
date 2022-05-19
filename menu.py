@@ -8,14 +8,11 @@ from requests.exceptions import ConnectionError
 from urllib3.exceptions import MaxRetryError
 
 from bot import bot, notify
-from misc_funcs import (
-    checkDataForMistakes,
-    isNewPassportValid,
-    isUserIdValid,
-    loadDataFromSettings,
-    saveDataToSettings,
-)
+from misc_funcs import (checkDataForMistakes, isNewPassportValid,
+                        isUserIdValid, loadDataFromSettings,
+                        saveDataToSettings)
 from rztk_checker import RZTKChecker
+from text_templates import *
 from web_checker import WebChecker
 
 
@@ -50,18 +47,7 @@ class Menu:
     def _mainMenu(self) -> None:
         self.__clear()
         try:
-            user_input = int(
-                input(
-                    "\n".join(
-                        [
-                            "1. Запуск бота",
-                            "2. Настройки",
-                            "3. Выход",
-                            ""
-                        ]
-                    )
-                )
-            )
+            user_input = int(input(MAIN_MENU))
         except ValueError:
             self.__wrongInput()
             self._mainMenu()
@@ -101,15 +87,7 @@ class Menu:
                         notify(order)
         except MaxRetryError and ConnectionError:
             self.__clear()
-            input(
-                "\n".join(
-                    [
-                        "Отсутствует подключение к интернету.",
-                        "------------------------------------",
-                        "Enter для возврата в главное меню.",
-                    ]
-                )
-            )
+            input(CONNECTION_FAILED)
             self._mainMenu()
         except KeyboardInterrupt:
             self.__clear()
@@ -121,20 +99,7 @@ class Menu:
     def _settingsMenu(self) -> None:
         self.__clear()
         try:
-            user_input = int(
-                input(
-                    "\n".join(
-                        [
-                            "1. Изменить данные входа на сайт",
-                            "2. Изменить данные входа на Rozetka",
-                            "3. Управление пользователями",
-                            "4. Изменить бот-токен для уведомлений",
-                            "0. Назад",
-                            "",
-                        ]
-                    )
-                )
-            )
+            user_input = int(input(SETTINGS_MENU))
         except ValueError:
             self.__wrongInput()
             self._settingsMenu()
@@ -146,14 +111,7 @@ class Menu:
 
     def _webLoginChange(self) -> None:
         self.__clear()
-        new_login = input(
-            "\n".join(
-                [
-                    "0. Назад",
-                    "Новое имя пользователя: ",
-                ]
-            )
-        )
+        new_login = input(LOGIN_CHANGE)
         if new_login == "0":
             self._settingsMenu()
         new_password = getpass("Новый пароль: ")
@@ -175,14 +133,7 @@ class Menu:
 
     def _rozetkaLoginChange(self) -> None:
         self.__clear()
-        new_login = input(
-            "\n".join(
-                [
-                    "0. Назад",
-                    "Новое имя пользователя: ",
-                ]
-            )
-        )
+        new_login = input(LOGIN_CHANGE)
         if new_login == "0":
             self._settingsMenu()
         new_password = getpass("Новый пароль: ")
@@ -203,18 +154,7 @@ class Menu:
     def _userEditMenu(self) -> None:
         self.__clear()
         try:
-            user_input = int(
-                input(
-                    "\n".join(
-                        [
-                            "1. Добавить нового пользователя",
-                            "2. Удалить пользователя",
-                            "0. Назад",
-                            "",
-                        ]
-                    )
-                )
-            )
+            user_input = int(input(USER_EDIT_MENU))
         except ValueError:
             self.__wrongInput()
             self._userEditMenu()
@@ -253,15 +193,7 @@ class Menu:
             bot.polling()
         except MaxRetryError and ConnectionError:
             self.__clear()
-            input(
-                "\n".join(
-                    [
-                        "Отсутствует подключение к интернету.",
-                        "------------------------------------",
-                        "Enter для возврата в главное меню.",
-                    ]
-                )
-            )
+            input(CONNECTION_FAILED)
             self._mainMenu()
         except KeyboardInterrupt:
             bot.stop_polling()
@@ -300,6 +232,7 @@ class Menu:
             if user_confirm in "Yy":
                 self.data["Users"].pop(user_input)
                 saveDataToSettings(data=self.data)
+                self.__clear()
                 print("Готово")
                 time.sleep(1)
                 self._mainMenu()
