@@ -274,6 +274,7 @@ class Menu:
             self.__addUser()
         self.data["Users"].update({user_name: user_id})
         saveDataToSettings(self.data)
+        self.__clear()
         print("Готово")
         time.sleep(1)
         self._mainMenu()

@@ -1,4 +1,3 @@
-import secrets
 import requests
 from bs4 import BeautifulSoup
 from misc_funcs import morphDataToNotify, exceptHtml
@@ -11,6 +10,10 @@ class WebChecker:
         self.session = requests.Session()
         self.notified_orders = list()
         self.new_orders = list()
+        self.headers = {
+            'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.84 Safari/537.36 OPR/85.0.4341.79'
+        }
 
     def loginTo(self):
         _data = {
@@ -21,12 +24,12 @@ class WebChecker:
             "password": self.password,
         }
         self.session.post(
-            "https://infoport.pro/cp/", headers=secrets.HEADER, data=_data
+            "https://infoport.pro/cp/",headers=self.headers, data=_data
         )
 
     def getNewOrders(self) -> list:
         try:
-            data = self.session.get("https://infoport.pro/cp/orders/").text
+            data = self.session.get("https://infoport.pro/cp/orders/", headers=self.headers).text
             soup = BeautifulSoup(data, "lxml")
             order_list = soup.find(class_="ordert").find_all("tr")
             self.new_orders = list()

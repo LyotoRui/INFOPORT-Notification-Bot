@@ -2,6 +2,11 @@ import telebot
 
 from misc_funcs import loadDataFromSettings
 
+try:
+    notify_ids = loadDataFromSettings()["Users"]
+except TypeError:
+    loadDataFromSettings()
+    notify_ids = loadDataFromSettings()["Users"]
 
 try:
     bot = telebot.TeleBot(
@@ -23,5 +28,5 @@ def login(message) -> None:
 
 @bot.message_handler(content_types=["text"])
 def notify(order_text: str) -> None:
-    for user in dict(loadDataFromSettings()["Users"]).items():
-        bot.send_message(user, text=order_text)
+    for user in notify_ids.keys():
+        bot.send_message(notify_ids[user], text=order_text)
