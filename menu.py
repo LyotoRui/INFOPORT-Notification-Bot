@@ -7,53 +7,58 @@ from pyfiglet import Figlet
 from requests.exceptions import ConnectionError
 from urllib3.exceptions import MaxRetryError
 
-from misc_funcs import (bot, checkDataForMistakes, isNewPassportValid,
-                        isUserIdValid, loadDataFromSettings, notify,
-                        saveDataToSettings)
+from bot import bot, notify
+from misc_funcs import (
+    checkDataForMistakes,
+    isNewPassportValid,
+    isUserIdValid,
+    loadDataFromSettings,
+    saveDataToSettings,
+)
 from rztk_checker import RZTKChecker
 from web_checker import WebChecker
 
 
 class Menu:
     def __init__(self) -> None:
-        os.system('cls')
+        os.system("cls")
         self.__greet()
         self.main_menu = {
             1: self.startWorking,
             2: self._settingsMenu,
             3: self._exit
-        }
+            }
         self.settings_menu = {
             1: self._webLoginChange,
             2: self._rozetkaLoginChange,
             3: self._userEditMenu,
             4: self.__botTokenChange,
-            0: self._mainMenu
+            0: self._mainMenu,
         }
         self.user_edit = {
             1: self.__addUser,
             2: self.__deleteUser,
-            0: self._settingsMenu
+            0: self._settingsMenu,
         }
         self.data = loadDataFromSettings()
         self._mainMenu()
-        
 
-    def __greet(self):
+    def __greet(self) -> None:
         prev_text = Figlet(font="slant")
         print(prev_text.renderText("INFOPORT BOT"))
 
-    def _mainMenu(self):
+    def _mainMenu(self) -> None:
         self.__clear()
         try:
             user_input = int(
-                input('\n'.join(
-                    [
-                        '1. Запуск бота',
-                        '2. Настройки',
-                        '3. Выход',
-                        ''
-                    ]
+                input(
+                    "\n".join(
+                        [
+                            "1. Запуск бота",
+                            "2. Настройки",
+                            "3. Выход",
+                            ""
+                        ]
                     )
                 )
             )
@@ -66,24 +71,24 @@ class Menu:
             self.__wrongInput()
             self._mainMenu()
 
-    def __clear(self):
-        os.system('cls')
+    def __clear(self) -> None:
+        os.system("cls")
         self.__greet()
 
-    def __wrongInput(self):
-        print('Неверный ввод')
+    def __wrongInput(self) -> None:
+        print("Неверный ввод")
         time.sleep(1)
         self.__clear()
 
-    def startWorking(self):
+    def startWorking(self) -> None:
         self.__clear()
         if not checkDataForMistakes(data=self.data):
-            print('\n', 'Не все данные заполнены в настройках.')
+            print("\n", "Не все данные заполнены в настройках.")
             time.sleep(3)
             self._mainMenu()
-        print('Работаю... (Ctrl + C для завершения) ')
-        web = WebChecker(login_data=self.data['WebLoginData'])
-        rztk = RZTKChecker(login_data=self.data['RozetkaLoginData'])
+        print("Работаю... (Ctrl + C для завершения) ")
+        web = WebChecker(login_data=self.data["WebLoginData"])
+        rztk = RZTKChecker(login_data=self.data["RozetkaLoginData"])
         try:
             while True:
                 web.getNewOrders()
@@ -95,33 +100,37 @@ class Menu:
                     for order in rztk.new_orders:
                         notify(order)
         except MaxRetryError and ConnectionError:
-            user_confirm = input('\n'.join(
-                [
-                    'Отсутствует подключение к интернету.',
-                    '------------------------------------',
-                    'Enter для возврата в главное меню.'
-                ]
-            ))
+            self.__clear()
+            input(
+                "\n".join(
+                    [
+                        "Отсутствует подключение к интернету.",
+                        "------------------------------------",
+                        "Enter для возврата в главное меню.",
+                    ]
+                )
+            )
             self._mainMenu()
         except KeyboardInterrupt:
             self.__clear()
-            print('Останавливаюсь...')
+            print("Останавливаюсь...")
             del web, rztk
             time.sleep(1)
             self._mainMenu()
 
-    def _settingsMenu(self):
+    def _settingsMenu(self) -> None:
         self.__clear()
         try:
             user_input = int(
-                input('\n'.join(
+                input(
+                    "\n".join(
                         [
-                            '1. Изменить данные входа на сайт',
-                            '2. Изменить данные входа на Rozetka',
-                            '3. Управление пользователями',
-                            '4. Изменить бот-токен для уведомлений',
-                            '0. Назад',
-                            ''
+                            "1. Изменить данные входа на сайт",
+                            "2. Изменить данные входа на Rozetka",
+                            "3. Управление пользователями",
+                            "4. Изменить бот-токен для уведомлений",
+                            "0. Назад",
+                            "",
                         ]
                     )
                 )
@@ -135,71 +144,73 @@ class Menu:
             self.__wrongInput()
             self._settingsMenu()
 
-    def _webLoginChange(self):
+    def _webLoginChange(self) -> None:
         self.__clear()
-        try:
-            print(
-                'Обновление данных логина для входа на сайт:',
-                'Текущий пользователь: {}'.format(self.data['WebLoginData']['login']),
-                sep='\n'
+        new_login = input(
+            "\n".join(
+                [
+                    "0. Назад",
+                    "Новое имя пользователя: ",
+                ]
             )
-        except IndexError:
-            pass
-        new_login = input('Новое имя пользователя: ')
-        new_password = getpass('Новый пароль: ')
+        )
+        if new_login == "0":
+            self._settingsMenu()
+        new_password = getpass("Новый пароль: ")
         if not isNewPassportValid(password=new_password):
-            print('Данный пароль не подходит')
+            print("Данный пароль не подходит")
             self.__clear()
             time.sleep()
-            new_password = getpass('Новый пароль: ')
+            new_password = getpass("Новый пароль: ")
         else:
-            self.data['WebLoginData'] = {
-                'login': new_login,
-                'password': new_password
-            }
+            self.data["WebLoginData"] = {
+                "login": new_login,
+                "password": new_password
+                }
         saveDataToSettings(self.data)
         self.__clear()
-        print('Готово')
+        print("Готово")
         time.sleep(1)
         self._mainMenu()
 
-    def _rozetkaLoginChange(self):
+    def _rozetkaLoginChange(self) -> None:
         self.__clear()
-        try:
-            print(
-                'Обновление данных логина для входа на сайт:',
-                'Текущий пользователь: {}'.format(list(self.data['RozetkaLoginData'].keys())[0]),
-                sep='\n'
+        new_login = input(
+            "\n".join(
+                [
+                    "0. Назад",
+                    "Новое имя пользователя: ",
+                ]
             )
-        except IndexError:
-            pass
-        new_login = input('Новое имя пользователя: ')
-        new_password = getpass('Новый пароль: ')
+        )
+        if new_login == "0":
+            self._settingsMenu()
+        new_password = getpass("Новый пароль: ")
         if not isNewPassportValid(password=new_password):
-            print('Данный пароль не подходит')
-            new_password = getpass('Новый пароль: ')
+            print("Данный пароль не подходит")
+            new_password = getpass("Новый пароль: ")
         else:
-            self.data['RozetkaLoginData'] = {
-                'login': new_login,
-                'password': new_password
+            self.data["RozetkaLoginData"] = {
+                "login": new_login,
+                "password": new_password,
             }
         saveDataToSettings(self.data)
         self.__clear()
-        print('Готово')
+        print("Готово")
         time.sleep(1)
         self._mainMenu()
 
-    def _userEditMenu(self):
+    def _userEditMenu(self) -> None:
         self.__clear()
         try:
             user_input = int(
                 input(
-                    '\n'.join(
+                    "\n".join(
                         [
-                            '1. Добавить нового пользователя',
-                            '2. Удалить пользователя',
-                            '0. Назад',
-                            ''
+                            "1. Добавить нового пользователя",
+                            "2. Удалить пользователя",
+                            "0. Назад",
+                            "",
                         ]
                     )
                 )
@@ -212,69 +223,83 @@ class Menu:
         except KeyError:
             self.__wrongInput()
             self._userEditMenu()
-    
-    def __botTokenChange(self):
-        new_token = input('\n'.join(
-            [
-                'Введите новый бот-токен: ',
-                '0. Назад',
-                ''
-            ]
-        ))
-        if new_token == '0':
+
+    def __botTokenChange(self) -> None:
+        self.__clear()
+        new_token = input("\n".join(["0. Назад", "Введите новый бот-токен: "]))
+        if new_token == "0":
             self._settingsMenu()
         else:
-            self.data['BotToken'] = new_token
+            self.data["BotToken"] = new_token
             saveDataToSettings(self.data)
-            print('Готово')
+            self.__clear()
+            print("Готово, для продолжения требуется перезапустить приложение")
             time.sleep(1)
-            self._settingsMenu()
+            self._exit()
 
-    def __addUser(self):
+    def __addUser(self) -> None:
+        self.__clear()
+        if not self.data["BotToken"]:
+            print("Не данных о бот-токене")
+            time.sleep(2)
+            self._settingsMenu()
         print(
-            'Необходимо открыть бот @Infoport_Notification_bot.',
-            'Далее, ввести команду /login, в ответ бот пришлет номер чата.',
-            'После копирования номера от бота, необходимо нажать Ctrl + C',
-            sep='\n'
+            "Необходимо открыть бот @Infoport_Notification_bot.",
+            "Далее, ввести команду /login, в ответ бот пришлет номер чата.",
+            "После копирования номера от бота, необходимо нажать Ctrl + C",
+            sep="\n",
         )
         try:
             bot.polling()
+        except MaxRetryError and ConnectionError:
+            self.__clear()
+            input(
+                "\n".join(
+                    [
+                        "Отсутствует подключение к интернету.",
+                        "------------------------------------",
+                        "Enter для возврата в главное меню.",
+                    ]
+                )
+            )
+            self._mainMenu()
         except KeyboardInterrupt:
             bot.stop_polling()
             self.__clear()
-        user_id = input('Введи номер полученный от бота: ')
+        user_id = input("Введи номер полученный от бота: ")
         if isUserIdValid(user_id):
-            user_name = input('Введи имя пользователя (латиницей): ')
+            user_name = input("Введи имя пользователя (латиницей): ")
         else:
             self.__wrongInput()
             self.__addUser()
-        self.data['Users'].update({user_name: user_id})
+        self.data["Users"].update({user_name: user_id})
         saveDataToSettings(self.data)
-        print('Готово')
+        print("Готово")
         time.sleep(1)
         self._mainMenu()
-        
 
-    
-    def __deleteUser(self):
+    def __deleteUser(self) -> None:
         self.__clear()
-        print('Введи имя пользователя которого необходимо удалить:', end='\n')
-        for index, user in enumerate(self.data['Users'].keys()):
-            print(f'{index + 1}. {user}')
-        print('0. Назад', end='\n')
+        print(
+            "Введи имя пользователя которого необходимо удалить:",
+            end="\n"
+            )
+        for index, user in enumerate(self.data["Users"].keys()):
+            print(f"{index + 1}. {user}")
+        print("0. Назад", end="\n")
         user_input = input()
-        if user_input == '0':
+        if user_input == "0":
             self._userEditMenu()
-        elif user_input in self.data['Users'].keys():
+        elif user_input in self.data["Users"].keys():
             user_confirm = str(
                 input(
-                    f'Удалить пользователя {user_input}? Y/N '
+                    f"Удалить пользователя {user_input}? Y/N "
+                    )
                 )
-            )
-            if user_confirm in 'Yy':
-                self.data['Users'].pop(user_input)
+            if user_confirm in "Yy":
+                self.data["Users"].pop(user_input)
                 saveDataToSettings(data=self.data)
-                print('Готово')
+                print("Готово")
                 time.sleep(1)
                 self._mainMenu()
             else:
@@ -283,8 +308,8 @@ class Menu:
             self.__wrongInput()
             self.__deleteUser()
 
-    def _exit(self):
+    def _exit(self) -> None:
         self.__clear()
-        print('Закрываемся...')
+        print("Закрываемся...")
         time.sleep(1)
         sys.exit()
