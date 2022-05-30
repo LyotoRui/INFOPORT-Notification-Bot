@@ -1,11 +1,13 @@
 import requests
-from misc_funcs import morphDataToNotify, passwordEncode
+
+from misc.functions import Functions
 
 
-class RZTKChecker:
-    def __init__(self, login_data: dict) -> None:
-        self.login = login_data["login"]
-        self.password = passwordEncode(login_data["password"])
+class RZTKChecker(Functions):
+    def __init__(self) -> None:
+        super().__init__()
+        self.login = self.data["RozetkaLoginData"]["login"]
+        self.password = self.passwordEncode(self.data["RozetkaLoginData"]["password"])
         self.notified_orders = list()
         self.new_orders = list()
 
@@ -20,8 +22,7 @@ class RZTKChecker:
         try:
             key = {"Authorization": f"Bearer {self.token}"}
             get_orders = requests.get(
-                "https://api-seller.rozetka.com.ua/orders/search?status=1",
-                headers=key
+                "https://api-seller.rozetka.com.ua/orders/search?status=1", headers=key
             ).json()
             self.new_orders = list()
             for order in get_orders["content"]["orders"]:
@@ -30,7 +31,7 @@ class RZTKChecker:
                     for item in order["items_photos"]:
                         products.append(item["item_name"])
                 self.new_orders.append(
-                    morphDataToNotify(
+                    self.morphDataToNotify(
                         source="ROZETKA",
                         order_id=order["id"],
                         customer_name=order["user_title"]["first_name"],
