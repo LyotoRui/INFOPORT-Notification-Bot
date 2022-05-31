@@ -80,3 +80,7 @@ class Functions:
         else:
             self.data[key] = arg
         self.saveDataToSettings()
+
+    def deleteUser(self, name: str) -> None:
+        self.data["Users"].pop(name)
+        self.saveDataToSettings()

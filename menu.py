@@ -137,6 +137,7 @@ class Menu:
         self.__clear()
         new_token = self.console.input(TOKEN_CHANGE)
         Functions().catchChanges(key="BotToken", arg=new_token)
+        bot.__init__(new_token)
         self.console.print(DONE)
         sleep(1)
         self._showSettingsMenu()
@@ -154,7 +155,7 @@ class Menu:
             self.__showError(WRONG_INPUT)
             self._showUserEditMenu()
 
-    def __addUser(self):
+    def __addUser(self) -> None:
         self.__clear()
         if not len(Functions().data["BotToken"]):
             self.__showError(NO_BOT_TOKEN)
@@ -178,12 +179,28 @@ class Menu:
         sleep(1)
         self._showSettingsMenu()
 
-    def __deleteUser(self):
-        pass
+    def __deleteUser(self) -> None:
+        self.__clear()
+        for index, user in enumerate(Functions().data['Users'].keys()):
+            self.console.print(f'{index + 1}. [bold]{user}[/bold]')
+        user_input = self.console.input(USER_DELETE).capitalize()
+        if user_input not in Functions().data['Users'].keys():
+            self.__showError(USER_NOT_FOUND)
+            self.__deleteUser()
+        user_confirm = self.console.input(USER_DELETE_CONFIRMATION.replace('%', user_input))
+        if user_confirm in 'Yy':
+            Functions().deleteUser(name=user_input)
+            self.console.print(DONE)
+            sleep(1)
+            self._showSettingsMenu()
+        else:
+            self._showSettingsMenu()
 
 
-try:
-    Menu()
-except Exception as e:
-    error.print_exception()
-    input()
+
+if __name__ == '__main__':
+    try:
+        Menu()
+    except Exception as e:
+        error.print_exception()
+        input()
